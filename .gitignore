@@ -1,3 +1,5 @@
+## Snoopy original
+
 debug/
 build/
 *.pyc
@@ -5,3 +7,9 @@ common/*mrenclave.h
 *.pdf
 *.pgf
 ssh_config
+
+## Others
+
+# IDE
+.idea/
+.vscode/

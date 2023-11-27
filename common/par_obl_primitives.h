@@ -3,26 +3,23 @@
 #include <condition_variable>
 
 namespace pos {
-  enum ThreadFn {
-    cmp,
-    stop
-  };
+enum ThreadFn { cmp, stop };
 
-  struct thread_state {
-    uint32_t k;
-    uint32_t j;
-    ThreadFn fn;
-    int curr_iter;
-    int n_done;
-  };
+struct thread_state {
+  uint32_t k;
+  uint32_t j;
+  ThreadFn fn;
+  int curr_iter;
+  int n_done;
+};
 
-  extern std::mutex m;
-  extern std::condition_variable cv;
-  extern thread_state state;
+extern std::mutex m;
+extern std::condition_variable cv;
+extern thread_state state;
 
-  void notify_threads(ThreadFn fn);
-  void wait_for_threads(int num_threads);
-}
+void notify_threads(ThreadFn fn);
+void wait_for_threads(int num_threads);
+}  // namespace pos
 
 std::pair<int, int> get_cutoffs_for_thread(int thread_id, int total, int n_threads);
 
@@ -30,26 +27,26 @@ namespace detail {
 template <typename T, typename Comparator>
 inline void imperative_o_sort_cmp(T *arr, Comparator cmp, int start, int end) {
   uint32_t i;
-    for (i = (uint32_t) start; i < (uint32_t) end; i++) {
-        uint32_t ij = i ^ pos::state.j;
-        if (ij > i) {
-            if ((i & pos::state.k) == 0) {
-                bool pred = cmp(arr[ij], arr[i]);
-                // These array accesses are oblivious because the indices are
-                // deterministic
-                T tmp = arr[i];
-                arr[i] = ObliviousChoose(pred, arr[ij], arr[i]);
-                arr[ij] = ObliviousChoose(pred, tmp, arr[ij]);
-            } else {
-                bool pred = cmp(arr[i], arr[ij]);
-                // These array accesses are oblivious because the indices are
-                // deterministic
-                T tmp = arr[i];
-                arr[i] = ObliviousChoose(pred, arr[ij], arr[i]);
-                arr[ij] = ObliviousChoose(pred, tmp, arr[ij]);
-            }
-        }
+  for (i = (uint32_t)start; i < (uint32_t)end; i++) {
+    uint32_t ij = i ^ pos::state.j;
+    if (ij > i) {
+      if ((i & pos::state.k) == 0) {
+        bool pred = cmp(arr[ij], arr[i]);
+        // These array accesses are oblivious because the indices are
+        // deterministic
+        T tmp = arr[i];
+        arr[i] = ObliviousChoose(pred, arr[ij], arr[i]);
+        arr[ij] = ObliviousChoose(pred, tmp, arr[ij]);
+      } else {
+        bool pred = cmp(arr[i], arr[ij]);
+        // These array accesses are oblivious because the indices are
+        // deterministic
+        T tmp = arr[i];
+        arr[i] = ObliviousChoose(pred, arr[ij], arr[i]);
+        arr[ij] = ObliviousChoose(pred, tmp, arr[ij]);
+      }
     }
+  }
 }
 
 template <typename T, typename Comparator>
@@ -58,16 +55,16 @@ inline void imperative_o_sort_thread(T *arr, size_t n, Comparator cmp, int n_thr
   int next_iter = 1;
   while (true) {
     std::unique_lock<std::mutex> lk(pos::m);
-    pos::cv.wait(lk, [next_iter, thread_id]{
-        bool ready = pos::state.curr_iter == next_iter;
-        /*
-        if (ready) {
-            printf("[t%d] got job\n", thread_id);
-        } else {
-            printf("[t%d] waiting for job\n", thread_id);
-        }
-        */
-        return ready;
+    pos::cv.wait(lk, [next_iter, thread_id] {
+      bool ready = pos::state.curr_iter == next_iter;
+      /*
+      if (ready) {
+          printf("[t%d] got job\n", thread_id);
+      } else {
+          printf("[t%d] waiting for job\n", thread_id);
+      }
+      */
+      return ready;
     });
     lk.unlock();
     pos::ThreadFn fn = pos::state.fn;
@@ -90,7 +87,8 @@ inline void imperative_o_sort_thread(T *arr, size_t n, Comparator cmp, int n_thr
 // of 2
 template <typename T, typename Comparator>
 inline void imperative_o_sort_parallel(T *arr, size_t n, Comparator cmp, int n_threads, int thread_id, bool adaptive) {
-  if (adaptive && sizeof(T) * n <= 1343488) {   // Heuristic; cost of coordination is worse than just sorting on one thread
+  if (adaptive &&
+      sizeof(T) * n <= 1343488) {  // Heuristic; cost of coordination is worse than just sorting on one thread
     n_threads = 1;
     if (thread_id > 0) {
       return;
@@ -116,7 +114,8 @@ inline void imperative_o_sort_parallel(T *arr, size_t n, Comparator cmp, int n_t
 }
 
 template <typename T, typename Comparator>
-inline void o_sort_parallel(T *arr, uint32_t low, uint32_t len, Comparator cmp, int n_threads, int thread_id, bool adaptive) {
+inline void o_sort_parallel(
+  T *arr, uint32_t low, uint32_t len, Comparator cmp, int n_threads, int thread_id, bool adaptive) {
   if (len > 1) {
     uint32_t m = greatest_power_of_two_less_than(len);
     if (m * 2 == len) {
@@ -130,7 +129,7 @@ inline void o_sort_parallel(T *arr, uint32_t low, uint32_t len, Comparator cmp, 
     }
   }
 }
-}
+}  // namespace detail
 
 template <typename Iter, typename Comparator>
 inline void ObliviousSortParallel(Iter begin, Iter end, Comparator cmp, int num_threads, int thread_id) {

@@ -62,11 +62,11 @@
 #define OBLIX_BASELINE_1000000 "1000000"
 
 #define CLIENT_PAYLOAD "GET / HTTP/1.0\r\n\r\n"
-#define SERVER_PAYLOAD                                   \
-    "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n" \
-    "<h2>mbed TLS Test Server</h2>\r\n"                  \
-    "<p>Successful connection : </p>\r\n"                \
-    "A message from TLS server inside enclave\r\n"
+#define SERVER_PAYLOAD \
+  "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n" \
+  "<h2>mbed TLS Test Server</h2>\r\n" \
+  "<p>Successful connection : </p>\r\n" \
+  "A message from TLS server inside enclave\r\n"
 
 #define CLIENT_PAYLOAD_SIZE strlen(CLIENT_PAYLOAD)
 #define SERVER_PAYLOAD_SIZE strlen(SERVER_PAYLOAD)
@@ -79,43 +79,46 @@
 #define ERROR 0
 
 /* Check a call that should return OKAY. */
-#define CHECK_C(expr) do {\
-  (rv = (expr));\
-  if (rv != OKAY) {\
-    goto cleanup;\
-  }\
-} while(false);
+#define CHECK_C(expr) \
+  do { \
+    (rv = (expr)); \
+    if (rv != OKAY) { \
+      goto cleanup; \
+    } \
+  } while (false);
 
 /* Check an allocation that should return non-NULL.*/
-#define CHECK_A(expr) do {\
-  (rv = ((expr) != NULL));\
-  if (rv != OKAY) {\
-    goto cleanup;\
-  }\
-} while(false);
-
+#define CHECK_A(expr) \
+  do { \
+    (rv = ((expr) != NULL)); \
+    if (rv != OKAY) { \
+      goto cleanup; \
+    } \
+  } while (false);
 
 // Assert that T is a specialization of the template TT, i.e., T = TT<foo>
-template<typename T, template<typename> class TT>
-struct is_instantiation_of : std::false_type { };
+template <typename T, template <typename> class TT>
+struct is_instantiation_of : std::false_type {};
 
-template<typename T, template<typename> class TT>
-struct is_instantiation_of<TT<T>, TT> : std::true_type { };
+template <typename T, template <typename> class TT>
+struct is_instantiation_of<TT<T>, TT> : std::true_type {};
 
 /* For testing */
 #ifndef NDEBUG
-#   define assertm(condition, message) \
-    do { \
-        if (! (condition)) { \
-            std::cerr << "Assertion `" #condition "` failed in " << __FILE__ \
-                      << " line " << __LINE__ << ": " << message << std::endl; \
-            std::terminate(); \
-        } \
-    } while (false)
+#define assertm(condition, message) \
+  do { \
+    if (!(condition)) { \
+      std::cerr << "Assertion `" #condition "` failed in " << __FILE__ << " line " << __LINE__ << ": " << message \
+                << std::endl; \
+      std::terminate(); \
+    } \
+  } while (false)
 #else
-#   define assertm(condition, message) do { } while (false)
+#define assertm(condition, message) \
+  do { \
+  } while (false)
 #endif
 
-# define assert_eq(actual, expected) assertm(expected == actual, "expected " << expected << " but got " << actual << "\n")
+#define assert_eq(actual, expected) \
+  assertm(expected == actual, "expected " << expected << " but got " << actual << "\n")
 #endif
-

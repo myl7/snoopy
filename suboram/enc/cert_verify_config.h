@@ -11,6 +11,6 @@
 #include "../../common/empty_server_pubkey.h"
 #define TLS_ENCLAVE TLS_SERVER
 
-oe_result_t verify_claim_value(const oe_claim_t* claim);
+oe_result_t verify_claim_value(const oe_claim_t *claim);
 
 #endif
