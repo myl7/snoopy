@@ -158,7 +158,6 @@ class SuboramDispatcher {
   void prefetch_bucket_sort();
   int buffered_bucket_sort(int thread_idx);
   int bucket_sort();
-  int melbourne_sort();
   int verify_sorted();
 
   int fetch_ct_from_queue();

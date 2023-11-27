@@ -1,9 +1,9 @@
 // Copyright (c) Open Enclave SDK contributors.
 // Licensed under the MIT License.
-#include <openenclave/enclave.h>
+// #include <openenclave/enclave.h>
 #include "../../common/load_balancer_client_enc_pubkey.h"
 #include "../../common/empty_server_pubkey.h"
-#include "suboram_t.h"
+// #include "suboram_t.h"
 #include "suboram.h"
 // #include "oblix/ORAM.hpp"
 // #include "oblix/OMAP.h"
@@ -73,58 +73,6 @@ int init(int num_blocks, int num_balancers, void *_s) {
     // return dispatcher.update_block_map();
 */
 
-int oblix_init() {
-  /*
-  printf("Oblix init\n");
-  uint8_t *block_key = (uint8_t *) "0123456789123456"; // TODO: Change keys
-  EVP_CIPHER_CTX *suboram_hash_key = EVP_CIPHER_CTX_new();
-  EVP_EncryptInit_ex(suboram_hash_key, EVP_aes_128_ecb(), NULL, block_key, NULL);
-
-  std::array< uint8_t, 16> value;
-  std::fill(value.begin(), value.end(), 0);
-  string val((const char *)value.data());
-
-  std::map<Bid, string> pairs;
-  int depth = (int) (ceil(log2(dispatcher.num_local_blocks)) - 1) + 1;
-  long long maxSize = (int) (pow(2, depth));
-  for (int i = 1; i < dispatcher.num_total_blocks; i++) {
-      if ((get_suboram_for_req(suboram_hash_key, i, dispatcher.num_suborams) == dispatcher.suboram_id)) {
-          pairs[i] = val;
-      }
-  }
-  map<unsigned long long, unsigned long long> permutation;
-  int j = 0;
-  int cnt = 0;
-  for (int i = 0; i < maxSize * 4; i++) {
-      if (i % 1000000 == 0) {
-          printf("%d/%d\n", i, maxSize * 4);
-      }
-      if (cnt == 4) {
-          j++;
-          cnt = 0;
-      }
-      permutation[i] = (j + 1) % maxSize;
-      cnt++;
-  }
-  std::array<byte_t,128> tmp_key{0};
-  omap = new OMAP(dispatcher.num_local_blocks, tmp_key, &pairs, &permutation);
-  printf("Finished OMAP constructor\n");
-  for (int i = 1; i <= dispatcher.num_total_blocks; i++) {
-      if (i < dispatcher.num_local_blocks) {
-          val = "test_" + std::to_string(i);
-          omap->insert(i, val);
-          string res = omap->find(i);
-          printf("found %d, val: %s\n", i, res.c_str());
-      }
-  }
-
-  free(suboram_hash_key);
-  */
-
-  int rv = dispatcher.init(NULL);
-  printf("Did dispatcher init\n");
-}
-
 int shuffle_blocks() {
   dispatcher.assign_new_permutation();
   dispatcher.buffered_bucket_sort(0);
@@ -157,10 +105,6 @@ int verify_sorted() {
 
 int insecure_sort() {
   return dispatcher.insecure_sort();
-}
-
-int melbourne_sort() {
-  return dispatcher.melbourne_sort();
 }
 
 void prefetch_bucket_sort() {
@@ -245,56 +189,4 @@ cleanup:
   if (in_data_arr) free(in_data_arr);
   if (out_data_arr) free(out_data_arr);
   *ret = rv;
-}
-
-void oblix_process_batch(int *ret, uint8_t *in_ct, uint8_t *in_iv, uint8_t *in_tag, uint8_t *out_ct, uint8_t *out_iv,
-  uint8_t *out_tag, uint32_t batch_sz, int32_t balancer_id) {
-  uint32_t *key_arr = (uint32_t *)malloc(batch_sz * sizeof(uint32_t));
-  uint8_t **in_data_arr = (uint8_t **)malloc(batch_sz * sizeof(uint8_t *));
-  // uint8_t **out_data_arr = (uint8_t **)malloc(batch_sz * sizeof(uint8_t *));
-
-  for (int i = 0; i < batch_sz; i++) {
-    in_data_arr[i] = (uint8_t *)malloc(BLOCK_LEN);
-    // out_data_arr[i] = (uint8_t *)malloc(BLOCK_LEN);
-  }
-  decrypt_key_val_pairs(dispatcher.comm_key[0], key_arr, in_data_arr, batch_sz, in_ct, in_iv, in_tag,
-    &dispatcher.replay_ctr_in[balancer_id], true);
-
-  /*
-  // TODO: oblix process requests
-  uint8_t zeros[BLOCK_LEN];
-  memset(zeros, 0, BLOCK_LEN);
-  std::array< uint8_t, 16> value;
-  std::fill(value.begin(), value.end(), 0);
-  for (int i = 0; i < batch_sz; i++) {
-      printf("Processing batch element %d/%d\n", i, batch_sz);
-      // This isn't completely secure but is the only API omix provides
-      if (memcmp(in_data_arr[i], zeros, BLOCK_LEN) == 0) {
-          // Read
-          string res = omap->find(key_arr[i]);
-          memcpy(in_data_arr[i], res.c_str(), BLOCK_LEN);
-      } else {
-          // Write
-          for (int j = 0; j < BLOCK_LEN; j++) {
-              value[j] = in_data_arr[i][j];
-          }
-          //std::copy_n(std::begin(in_data_arr[i]), BLOCK_LEN, value.begin());
-          string val((const char *)value.data());
-
-          omap->insert(key_arr[i], val);
-      }
-  }
-  printf("Done with batch\n");
-  */
-
-  encrypt_key_val_pairs(dispatcher.comm_key[0], out_ct, out_iv, out_tag, key_arr, in_data_arr, batch_sz,
-    &dispatcher.replay_ctr_out[balancer_id], true);
-
-  for (int i = 0; i < batch_sz; i++) {
-    free(in_data_arr[i]);
-    // free(out_data_arr[i]);
-  }
-  free(key_arr);
-  free(in_data_arr);
-  // free(out_data_arr);
 }
